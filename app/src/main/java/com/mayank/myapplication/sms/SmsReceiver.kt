@@ -21,7 +21,9 @@ class SmsReceiver : BroadcastReceiver() {
             val app = context.applicationContext as FinanceApp
             val body = msg.messageBody
             val date = msg.timestampMillis
-            val id = msg.messageId.toString()
+            // Generate a stable identifier for this SMS since SmsMessage does not
+            // expose a message ID for received broadcasts on all API levels.
+            val id = "${msg.originatingAddress}-${msg.timestampMillis}-${body.hashCode()}"
             SmsParser.parse(body, date, id)?.let { spending ->
                 CoroutineScope(Dispatchers.IO).launch {
                     app.repository.insert(spending)
